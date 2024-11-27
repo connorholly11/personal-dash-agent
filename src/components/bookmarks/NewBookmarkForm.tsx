@@ -17,17 +17,13 @@ export default function NewBookmarkForm({ onSave, onCancel }: NewBookmarkFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const tagArray = tags
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag !== '');
+    const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
 
     await saveBookmark({
-      title,
       url,
+      title,
       description,
       tags: tagArray,
-      timestamp: Date.now(),
     });
 
     onSave();
