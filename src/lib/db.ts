@@ -5,6 +5,7 @@ import { Note } from '@/types/note';
 import { Meal, SavedMeal, WeightEntry } from '@/types/diet';
 import { Bookmark } from '@/types/bookmark';
 import { FocusSession, Task, Reminder } from '@/types/work';
+import { Subscription } from '@/types/money';
 
 export class MyAppDatabase extends Dexie {
   workouts!: Table<Workout>;
@@ -18,6 +19,7 @@ export class MyAppDatabase extends Dexie {
   focusSessions!: Table<FocusSession>;
   tasks!: Table<Task>;
   reminders!: Table<Reminder>;
+  subscriptions!: Table<Subscription>;
 
   constructor() {
     super('myAppDatabase');
@@ -32,7 +34,8 @@ export class MyAppDatabase extends Dexie {
       weightEntries: '++id, userId, timestamp',
       focusSessions: '++id, userId, startTime, endTime',
       tasks: '++id, userId, completed, createdAt',
-      reminders: '++id, userId, createdAt'
+      reminders: '++id, userId, createdAt',
+      subscriptions: '++id, userId, createdAt'
     });
   }
 }
