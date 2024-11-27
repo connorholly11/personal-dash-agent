@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { FocusSession, Task, FocusSessionStats, Reminder } from '@/types/work';
 import { saveFocusSession, getFocusSessionStats, saveTask, getTasks, toggleTask, deleteTask, saveReminder, getReminders, deleteReminder } from '@/lib/work-storage';
+import FocusHeatMap from '@/components/work/FocusHeatMap';
 
 export default function WorkPage() {
   const [stats, setStats] = useState<FocusSessionStats>({ daily: 0, weekly: 0, monthly: 0 });
   const [activeTasks, setActiveTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [newReminder, setNewReminder] = useState('');
   const [newTask, setNewTask] = useState<{
     title: string;
@@ -35,9 +37,36 @@ export default function WorkPage() {
     'nice-to-have': 'Nice to Have'
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const formatDate = (date: number | Date) => {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTaskDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    });
+  };
+
+  const handleAddSession = async () => {
+    if (sessionDuration > 0) {
+      await saveFocusSession(sessionDuration, sessionNotes, selectedDate);
+      setIsAddingSession(false);
+      setSessionDuration(90);
+      setSessionNotes('');
+      loadData(); // Refresh the stats
+    }
+  };
 
   const loadData = async () => {
     const [latestStats, tasksList, remindersList] = await Promise.all([
@@ -50,6 +79,10 @@ export default function WorkPage() {
     setCompletedTasks(tasksList.filter(task => task.completed));
     setReminders(remindersList);
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,14 +121,16 @@ export default function WorkPage() {
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-    });
+  const handlePreviousDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
   };
 
   const TaskItem = ({ task, showDate = false }: { task: Task; showDate?: boolean }) => (
@@ -127,7 +162,7 @@ export default function WorkPage() {
           )}
           {showDate && task.completedAt && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Completed on {formatDate(task.completedAt)}
+              Completed on {formatTaskDate(task.completedAt)}
             </p>
           )}
         </div>
@@ -143,7 +178,26 @@ export default function WorkPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Work Dashboard</h1>
+      {/* Date Navigation */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div className="flex justify-between items-center">
+          <button
+            onClick={handlePreviousDay}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            Previous Day
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {formatDate(selectedDate)}
+          </h1>
+          <button
+            onClick={handleNextDay}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            Next Day
+          </button>
+        </div>
+      </div>
 
       {/* Focus Session Stats */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
@@ -165,6 +219,12 @@ export default function WorkPage() {
             <span className="text-3xl font-semibold text-indigo-600 dark:text-indigo-400">{stats.monthly}</span>
           </div>
         </div>
+      </div>
+
+      {/* Focus Session History */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Focus Session History</h2>
+        <FocusHeatMap weeks={26} />
       </div>
 
       {/* Add Focus Session */}

@@ -4,11 +4,14 @@ import type { FocusSession, Task, FocusSessionStats, Reminder } from '@/types/wo
 // Temporary user ID until auth is implemented
 const TEMP_USER_ID = 'temp-user';
 
-export async function saveFocusSession(duration: number, notes?: string): Promise<FocusSession> {
-  const now = Date.now();
+export async function saveFocusSession(duration: number, notes?: string, date: Date = new Date()): Promise<FocusSession> {
+  // Set the time to noon of the selected day to avoid timezone issues
+  const sessionDate = new Date(date);
+  sessionDate.setHours(12, 0, 0, 0);
+  
   const session: Omit<FocusSession, 'id'> = {
-    startTime: now - (duration * 60 * 1000),
-    endTime: now,
+    startTime: sessionDate.getTime(),
+    endTime: sessionDate.getTime() + (duration * 60 * 1000),
     duration,
     notes,
     userId: TEMP_USER_ID
@@ -117,4 +120,24 @@ export async function getReminders(): Promise<Reminder[]> {
 
 export async function deleteReminder(reminderId: string): Promise<void> {
   await db.reminders.delete(reminderId);
+}
+
+export async function getFocusSessionsByDateRange(startDate: Date, endDate: Date): Promise<{ [date: string]: number }> {
+  const sessions = await db.focusSessions
+    .where('userId')
+    .equals(TEMP_USER_ID)
+    .and(session => {
+      const sessionDate = new Date(session.startTime);
+      return sessionDate >= startDate && sessionDate <= endDate;
+    })
+    .toArray();
+
+  // Group sessions by date
+  const sessionsByDate: { [date: string]: number } = {};
+  sessions.forEach(session => {
+    const date = new Date(session.startTime).toISOString().split('T')[0];
+    sessionsByDate[date] = (sessionsByDate[date] || 0) + 1;
+  });
+
+  return sessionsByDate;
 } 
