@@ -1,3 +1,9 @@
+export interface HabitFormData {
+  name: string;
+  description?: string;
+  backtrackDays: number;
+}
+
 export interface Streak {
   startDate: number;  // Unix timestamp in milliseconds
   endDate: number;    // Unix timestamp in milliseconds
@@ -15,9 +21,4 @@ export interface Habit {
   totalSeconds: number;
   lastUpdated: number;  // Unix timestamp in milliseconds
   userId: string;
-}
-
-export interface HabitFormData {
-  name: string;
-  description?: string;
 } 

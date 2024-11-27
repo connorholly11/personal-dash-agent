@@ -11,15 +11,23 @@ export async function getHabits(): Promise<Habit[]> {
     .toArray();
 }
 
-export async function saveHabit(name: string, description?: string): Promise<Habit> {
+export async function saveHabit(name: string, description?: string, backtrackDays: number = 0): Promise<Habit> {
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const startTime = now - (backtrackDays * oneDayMs);
+  
+  // Calculate total seconds directly from days (1 day = 86400 seconds)
+  const totalSeconds = backtrackDays * 86400;
+  
   const habit: Omit<Habit, 'id'> = {
     name,
     description,
     isActive: true,
-    currentStreak: 0,
+    currentStreak: Math.floor(backtrackDays),
     streakHistory: [],
-    totalSeconds: 0,
-    lastUpdated: Date.now(),
+    totalSeconds: Math.floor(totalSeconds),
+    lastUpdated: now,
+    lastActive: startTime,
     userId: TEMP_USER_ID
   };
 

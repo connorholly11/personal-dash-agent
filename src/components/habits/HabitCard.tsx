@@ -45,6 +45,15 @@ export default function HabitCard({ habit, onUpdate }: HabitCardProps) {
     }
   };
 
+  const handleBacktrack = async (startDate: number) => {
+    if (!localHabit.id) return;
+    const updatedHabit = await toggleHabit(localHabit.id, startDate);
+    if (updatedHabit) {
+      setLocalHabit(updatedHabit);
+      onUpdate();
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
       month: 'short',
