@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Meal, SavedMeal } from '@/types/diet';
-import { getMealsByDate, getSavedMeals } from '@/lib/diet-storage';
+import { getMealsByDate, getSavedMeals, saveMeal } from '@/lib/diet-storage';
 import MealCard from '@/components/diet/MealCard';
 import NewMealForm from '@/components/diet/NewMealForm';
 import SavedMealCard from '@/components/diet/SavedMealCard';
@@ -16,16 +16,16 @@ export default function DietPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showSavedMeals, setShowSavedMeals] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const mealsList = await getMealsByDate(selectedDate);
     const savedMealsList = await getSavedMeals();
     setMeals(mealsList.sort((a, b) => b.timestamp - a.timestamp));
     setSavedMeals(savedMealsList);
-  };
+  }, [selectedDate]);
 
   useEffect(() => {
     loadData();
-  }, [selectedDate]);
+  }, [loadData]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -130,14 +130,13 @@ export default function DietPage() {
                 meal={meal}
                 onUse={(savedMeal) => {
                   // Handle using a saved meal
-                  const mealData = {
+                  saveMeal({
                     mealType: 'snack',
                     foodItems: savedMeal.foodItems,
                     calories: savedMeal.calories,
                     macros: savedMeal.macros,
                     notes: savedMeal.notes
-                  };
-                  // saveMeal(mealData);
+                  });
                   loadData();
                 }}
                 onUpdate={loadData}

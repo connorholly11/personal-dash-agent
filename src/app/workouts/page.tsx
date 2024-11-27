@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Workout, WorkoutCategory } from '@/types/workout';
 import { getWorkoutsByDate } from '@/lib/workout-storage';
 import WorkoutCard from '@/components/workouts/WorkoutCard';
@@ -16,14 +16,14 @@ export default function WorkoutsPage() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
-  const loadWorkouts = async () => {
+  const loadWorkouts = useCallback(async () => {
     const workoutsList = await getWorkoutsByDate(selectedDate);
     setWorkouts(workoutsList);
-  };
+  }, [selectedDate]);
 
   useEffect(() => {
     loadWorkouts();
-  }, [selectedDate]);
+  }, [loadWorkouts]);
 
   const filteredWorkouts = selectedCategory === 'all'
     ? workouts

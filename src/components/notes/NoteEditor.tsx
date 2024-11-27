@@ -5,8 +5,52 @@ import { Note } from '@/types/note';
 
 interface NoteEditorProps {
   note?: Note;
-  onSave: (noteData: { title: string; content: string; tags?: string[] }) => Promise<void>;
+  onSave: (noteData: NoteData) => Promise<void>;
   onCancel: () => void;
+}
+
+interface NoteData {
+  title: string;
+  content: string;
+  tags: string[];
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onerror: ((event: Event) => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: ((event: Event) => void) | null;
+}
+
+interface Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
 }
 
 export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) {
@@ -18,61 +62,35 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
   const [isSupported, setIsSupported] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     // Check if speech recognition is supported
-    if (typeof window !== 'undefined' && 
-        (window.SpeechRecognition || (window as any).webkitSpeechRecognition)) {
-      setIsSupported(true);
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0].transcript)
-          .join('');
-        setContent((prevContent) => prevContent + ' ' + transcript);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        let message = 'An error occurred with speech recognition';
+    if (typeof window !== 'undefined') {
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognitionAPI) {
+        setIsSupported(true);
+        recognitionRef.current = new SpeechRecognitionAPI();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
         
-        switch (event.error) {
-          case 'network':
-            message = 'Please check your internet connection and try again';
-            break;
-          case 'not-allowed':
-          case 'permission-denied':
-            message = 'Microphone access is required for dictation. Please allow microphone access in your browser settings';
-            break;
-          case 'no-speech':
-            message = 'No speech was detected. Please try again';
-            break;
-          case 'audio-capture':
-            message = 'No microphone was found. Please check your microphone connection';
-            break;
-          case 'aborted':
-            message = 'Dictation was aborted';
-            break;
-        }
-        
-        setErrorMessage(message);
-        setIsRecording(false);
-      };
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0].transcript)
+            .join('');
+          setContent(prev => prev + ' ' + transcript);
+        };
 
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
-    }
+        recognitionRef.current.onerror = (event: Event) => {
+          console.error('Speech recognition error:', event);
+          setIsRecording(false);
+        };
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+        };
       }
-    };
+    }
   }, []);
 
   const toggleRecording = async () => {
@@ -80,14 +98,14 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
         setErrorMessage(null);
-        recognitionRef.current.start();
+        recognitionRef.current?.start();
         setIsRecording(true);
       } catch (error) {
         setErrorMessage('Microphone access was denied. Please allow microphone access in your browser settings');
         setIsRecording(false);
       }
     } else {
-      recognitionRef.current.stop();
+      recognitionRef.current?.stop();
       setIsRecording(false);
     }
   };

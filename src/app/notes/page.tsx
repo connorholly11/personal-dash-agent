@@ -24,8 +24,9 @@ export default function NotesPage() {
       setError(null);
       const notesList = await getNotes();
       setNotes(notesList);
-    } catch (error) {
-      setError('Failed to load notes. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load notes');
+      console.error('Error loading notes:', err);
     } finally {
       setIsLoading(false);
     }

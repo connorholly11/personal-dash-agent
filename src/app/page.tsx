@@ -59,14 +59,14 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Today's Workouts</h3>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Today&apos;s Workouts</h3>
           <div className="mt-2 flex items-baseline">
             <span className="text-3xl font-semibold text-green-600 dark:text-green-400">{todayWorkouts}</span>
           </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Today's Calories</h3>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Today&apos;s Calories</h3>
           <div className="mt-2 flex items-baseline">
             <span className="text-3xl font-semibold text-yellow-600 dark:text-yellow-400">{calories}</span>
             <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">kcal</span>
@@ -97,8 +97,8 @@ export default function DashboardPage() {
                   {bookmark.title}
                 </a>
                 {bookmark.description && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {bookmark.description}
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {bookmark.description && bookmark.description}
                   </p>
                 )}
               </div>

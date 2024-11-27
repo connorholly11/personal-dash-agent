@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { Workout, WorkoutFormData, Exercise, ExerciseFormData } from '@/types/workout';
+import type { Workout, WorkoutFormData, Exercise } from '@/types/workout';
 
 // Temporary user ID until auth is implemented
 const TEMP_USER_ID = 'temp-user';
