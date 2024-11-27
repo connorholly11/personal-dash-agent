@@ -48,20 +48,20 @@ interface SpeechRecognition extends EventTarget {
   onend: ((event: Event) => void) | null;
 }
 
-interface Window {
-  SpeechRecognition?: new () => SpeechRecognition;
-  webkitSpeechRecognition?: new () => SpeechRecognition;
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
 }
 
 export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || '');
   const [content, setContent] = useState(note?.content || '');
   const [tags, setTags] = useState<string[]>(note?.tags || []);
-  const [tagInput, setTagInput] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
@@ -71,27 +71,39 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
       if (SpeechRecognitionAPI) {
         setIsSupported(true);
         recognitionRef.current = new SpeechRecognitionAPI();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-        
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-          const transcript = Array.from(event.results)
-            .map(result => result[0].transcript)
-            .join('');
-          setContent(prev => prev + ' ' + transcript);
-        };
+        if (recognitionRef.current) {
+          recognitionRef.current.continuous = true;
+          recognitionRef.current.interimResults = true;
+          
+          recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+            const transcript = Array.from(event.results)
+              .map(result => result[0].transcript)
+              .join('');
+            setContent(prev => prev + ' ' + transcript);
+          };
 
-        recognitionRef.current.onerror = (event: Event) => {
-          console.error('Speech recognition error:', event);
-          setIsRecording(false);
-        };
+          recognitionRef.current.onerror = (event: Event) => {
+            console.error('Speech recognition error:', event);
+            setIsRecording(false);
+            setErrorMessage('An error occurred with speech recognition');
+          };
 
-        recognitionRef.current.onend = () => {
-          setIsRecording(false);
-        };
+          recognitionRef.current.onend = () => {
+            setIsRecording(false);
+          };
+        }
       }
     }
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await onSave({ title, content, tags });
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save note');
+    }
+  };
 
   const toggleRecording = async () => {
     if (!isRecording) {
@@ -100,31 +112,13 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         setErrorMessage(null);
         recognitionRef.current?.start();
         setIsRecording(true);
-      } catch (error) {
-        setErrorMessage('Microphone access was denied. Please allow microphone access in your browser settings');
-        setIsRecording(false);
+      } catch (err) {
+        setErrorMessage('Failed to access microphone. Please check your permissions.');
+        console.error('Microphone access error:', err);
       }
     } else {
       recognitionRef.current?.stop();
       setIsRecording(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) {
-      setErrorMessage('Please enter a title');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      setErrorMessage(null);
-      await onSave({ title, content, tags });
-    } catch (error) {
-      setErrorMessage('Failed to save note. Please try again.');
-    } finally {
-      setIsSaving(false);
     }
   };
 

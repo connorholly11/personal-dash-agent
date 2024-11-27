@@ -32,7 +32,7 @@ export default function NotesPage() {
     }
   };
 
-  const handleSave = async (noteData: any) => {
+  const handleSave = async (noteData: NoteData) => {
     try {
       if (editingNote) {
         await updateNote({
@@ -46,8 +46,8 @@ export default function NotesPage() {
       setIsEditing(false);
       setEditingNote(undefined);
       await loadNotes();
-    } catch (error) {
-      throw error; // Let the NoteEditor handle the error
+    } catch (err) {
+      throw err; // Let the NoteEditor handle the error
     }
   };
 
