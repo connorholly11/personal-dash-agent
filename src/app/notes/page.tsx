@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Note } from '@/types/note';
 import { getNotes, saveNote, updateNote } from '@/lib/note-storage';
-import NoteEditor from '@/components/notes/NoteEditor';
+import NoteEditor, { NoteData } from '@/components/notes/NoteEditor';
 import NoteCard from '@/components/notes/NoteCard';
 
 export default function NotesPage() {

@@ -9,7 +9,7 @@ interface NoteEditorProps {
   onCancel: () => void;
 }
 
-interface NoteData {
+export interface NoteData {
   title: string;
   content: string;
   tags: string[];
