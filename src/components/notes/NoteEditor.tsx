@@ -153,7 +153,6 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           placeholder="Enter note title"
-          disabled={isSaving}
         />
       </div>
 
@@ -169,18 +168,16 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
             onChange={(e) => setContent(e.target.value)}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="Enter note content"
-            disabled={isSaving}
           />
           {isSupported && (
             <button
               type="button"
               onClick={toggleRecording}
-              disabled={isSaving}
               className={`absolute bottom-2 right-2 p-2 rounded-full ${
                 isRecording
                   ? 'bg-red-500 hover:bg-red-600'
                   : 'bg-indigo-500 hover:bg-indigo-600'
-              } text-white ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } text-white`}
               title={isRecording ? 'Stop dictation' : 'Start dictation'}
             >
               <svg
@@ -252,17 +249,15 @@ export default function NoteEditor({ note, onSave, onCancel }: NoteEditorProps) 
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSaving}
           className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isSaving}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          Save
         </button>
       </div>
     </form>
